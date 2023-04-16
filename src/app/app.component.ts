@@ -1,5 +1,6 @@
+import { NewsService } from './service/news.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
 
 @Component({
@@ -7,14 +8,28 @@ import { MatSidenav } from '@angular/material/sidenav';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent implements AfterViewInit,OnInit {
 
   title = 'newapp';
+  public sources: any = [];
+  public articles: any = [];
+  public selectedNewsChannel:string = "Top 10 Trending News!"
   @ViewChild(MatSidenav) sideNav!: MatSidenav;
-articles: any;
 
-  constructor(private observer : BreakpointObserver, private cdr : ChangeDetectorRef) {
+  constructor(private observer : BreakpointObserver, private cdr : ChangeDetectorRef, private newsApi : NewsService) {
 
+  }
+  ngOnInit(): void {
+    this.newsApi.initArticles()
+    .subscribe((res:any)=>{
+      console.log(res);
+      this.articles = res.articles;
+    });
+    this.newsApi.initSources()
+    .subscribe((res:any)=>{
+      console.log(res);
+      this.sources = res.sources;
+    });
   }
 
   ngAfterViewInit(): void {
@@ -30,5 +45,12 @@ articles: any;
       }
     });
     this.cdr.detectChanges();
+  }
+  searchSource(source : any){
+    this.newsApi.getArticlesByID(source.id)
+    .subscribe((res:any)=>{
+      this.selectedNewsChannel = source.name
+      this.articles = res.articles;
+    })
   }
 }
